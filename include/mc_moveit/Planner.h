@@ -12,9 +12,9 @@
 
 #include <moveit/moveit_cpp/moveit_cpp.h>
 #include <moveit/moveit_cpp/planning_component.h>
-// FIXME For noetic use moveit::core namespace instead as moveit::planning_interface is deprecated
-using MoveItCpp = moveit::planning_interface::MoveItCpp;
-using PlanningComponent = moveit::planning_interface::PlanningComponent;
+
+using MoveItCpp = moveit_cpp::MoveItCpp;
+using PlanningComponent = moveit_cpp::PlanningComponent;
 
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit/robot_state/conversions.h>
