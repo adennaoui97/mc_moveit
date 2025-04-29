@@ -123,7 +123,7 @@ static void visual_to_msg(const rbd::parsers::Visual & visual, moveit_msgs::Coll
   };
   auto mesh_to_msg = [&]() {
     const auto & mesh = boost::get<rbd::parsers::Geometry::Mesh>(visual.geometry.data);
-    auto mesh_data = shapes::createMeshFromResource(mesh.filename, Eigen::Vector3d::Constant(mesh.scale));
+    auto mesh_data = shapes::createMeshFromResource(mesh.filename, mesh.scaleV);
     object.meshes.push_back({});
     shape_msgs::Mesh & shape = object.meshes.back();
     shape.triangles.resize(mesh_data->triangle_count);
@@ -265,7 +265,9 @@ Planner::Planner(const mc_rbdyn::Robot & robot, const std::string & ef_body, con
   }
   moveit_cpp_ptr_ = std::make_shared<MoveItCpp>(nh_);
 
-  monitor_ = moveit_cpp_ptr_->getPlanningSceneMonitor();
+  auto monitor_ptr = std::const_pointer_cast<planning_scene_monitor::PlanningSceneMonitor>(
+    moveit_cpp_ptr_->getPlanningSceneMonitor());
+  monitor_ = monitor_ptr;
   monitor_->providePlanningSceneService(
       fmt::format("{}/{}", config.ns, planning_scene_monitor::PlanningSceneMonitor::DEFAULT_PLANNING_SCENE_SERVICE));
   monitor_->startWorldGeometryMonitor(
@@ -352,7 +354,9 @@ void Planner::add_obstacle(const rbd::parsers::Visual & object, const sva::PTran
   msg.pose = PtToMsg(object.origin * X_0_object);
   msg.operation = msg.ADD;
   obstacles_publisher_.publish(msg);
-  planning_scene_monitor::LockedPlanningSceneRW scene(moveit_cpp_ptr_->getPlanningSceneMonitor());
+  planning_scene_monitor::LockedPlanningSceneRW scene(
+    std::const_pointer_cast<planning_scene_monitor::PlanningSceneMonitor>(
+        moveit_cpp_ptr_->getPlanningSceneMonitor()));
   scene->processCollisionObjectMsg(msg);
 }
 
@@ -371,7 +375,9 @@ void Planner::update_obstacle(const std::string & object, const sva::PTransformd
   msg.pose = PtToMsg(it->second.object.origin * X_0_object);
   msg.operation = msg.MOVE;
   obstacles_publisher_.publish(msg);
-  planning_scene_monitor::LockedPlanningSceneRW scene(moveit_cpp_ptr_->getPlanningSceneMonitor());
+   planning_scene_monitor::LockedPlanningSceneRW scene(
+    std::const_pointer_cast<planning_scene_monitor::PlanningSceneMonitor>(
+        moveit_cpp_ptr_->getPlanningSceneMonitor()));
   scene->processCollisionObjectMsg(msg);
 }
 
@@ -391,8 +397,9 @@ void Planner::remove_obstacle(const std::map<std::string, Obstacle>::iterator & 
   moveit_msgs::CollisionObject msg;
   msg.header.frame_id = monitor_->getPlanningScene()->getPlanningFrame();
   msg.id = it->first;
-  msg.operation = msg.REMOVE;
-  obstacles_publisher_.publish(msg);
+  msg.operation = msg.REMOVE; planning_scene_monitor::LockedPlanningSceneRW scene(
+    std::const_pointer_cast<planning_scene_monitor::PlanningSceneMonitor>(
+        moveit_cpp_ptr_->getPlanningSceneMonitor()));
   planning_scene_monitor::LockedPlanningSceneRW scene(moveit_cpp_ptr_->getPlanningSceneMonitor());
   scene->processCollisionObjectMsg(msg);
   obstacles_.erase(it);
@@ -440,7 +447,9 @@ void Planner::set_octomap(const octomap::OcTree & octomap_, const sva::PTransfor
 
   planning_scene_msg.is_diff = true;
   planning_scene_publisher_.publish(planning_scene_msg);
-  planning_scene_monitor::LockedPlanningSceneRW scene(moveit_cpp_ptr_->getPlanningSceneMonitor());
+   planning_scene_monitor::LockedPlanningSceneRW scene(
+    std::const_pointer_cast<planning_scene_monitor::PlanningSceneMonitor>(
+        moveit_cpp_ptr_->getPlanningSceneMonitor()));
   scene->processOctomapMsg(octomap);
 }
 
