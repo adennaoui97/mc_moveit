@@ -8,6 +8,10 @@ project(mc_moveit LANGUAGES C CXX VERSION 1.0.0)
 include(GNUInstallDirs)
 
 find_package(mc_rtc REQUIRED)
+set(CURL_LIBRARY "/lib/x86_64-linux-gnu/libcurl.so")
+find_package(CURL REQUIRED)
+
+include_directories(${CURL_INCLUDE_DIRS})
 
 if(NOT TARGET mc_rtc::mc_rtc_ros)
   message(FATAL_ERROR "mc_rtc ROS plugin must be installed to build mc_moveit")
@@ -52,6 +56,6 @@ install(TARGETS mc_moveit
 
 find_package(Boost REQUIRED COMPONENTS program_options)
 add_executable(mc_moveit_sample src/sample.cpp)
-target_link_libraries(mc_moveit_sample PUBLIC mc_moveit Boost::program_options)
+target_link_libraries(mc_moveit_sample PUBLIC mc_moveit Boost::program_options ${CURL_LIBRARIES})
 
 add_subdirectory(cmake)
